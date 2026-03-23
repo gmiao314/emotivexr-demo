@@ -1,0 +1,1065 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>ARIA - EMOTIV XR</title>
+    <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;1,300&family=Syncopate:wght@700&family=Space+Mono&display=swap');
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0
+    }
+
+    :root {
+        --bg: #05080F;
+        --gold: #C8A96E;
+        --gdim: rgba(200, 169, 110, 0.22);
+        --text: #E8E0D0;
+        --dim: rgba(232, 224, 208, 0.36);
+        --bd: rgba(255, 255, 255, 0.07);
+        --blue: #4A9EFF;
+        --grn: #4AFF8B
+    }
+
+    html, body {
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: var(--bg);
+        color: var(--text);
+        font-family: 'Space Mono', monospace
+    }
+
+    canvas {
+        position: fixed;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 0
+    }
+
+    header {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 20;
+        padding: 14px 18px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: linear-gradient(to bottom, rgba(5, 8, 15, .95), transparent)
+    }
+
+    .brand {
+        font-family: 'Syncopate', sans-serif;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: .18em
+    }
+
+    .brand span {
+        color: var(--gold)
+    }
+
+    .pill {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 8px;
+        letter-spacing: .12em;
+        text-transform: uppercase;
+        color: var(--dim);
+        border: 1px solid var(--bd);
+        border-radius: 20px;
+        padding: 4px 10px
+    }
+
+    .dot {
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        background: var(--dim);
+        transition: all .4s
+    }
+
+    .dot.live {
+        background: var(--grn);
+        box-shadow: 0 0 6px var(--grn)
+    }
+
+    .dot.think {
+        background: var(--gold);
+        box-shadow: 0 0 6px var(--gold)
+    }
+
+    .dot.speak {
+        background: var(--blue);
+        box-shadow: 0 0 6px var(--blue)
+    }
+
+    .toasts {
+        position: fixed;
+        top: 60px;
+        right: 12px;
+        z-index: 30;
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        pointer-events: none
+    }
+
+    .toast {
+        background: rgba(200, 169, 110, .07);
+        border: 1px solid var(--gdim);
+        border-radius: 6px;
+        padding: 5px 10px;
+        font-size: 9px;
+        letter-spacing: .12em;
+        text-transform: uppercase;
+        color: var(--gold)
+    }
+
+    .avatar-id {
+        position: fixed;
+        bottom: 210px;
+        left: 0;
+        right: 0;
+        text-align: center;
+        z-index: 10;
+        pointer-events: none
+    }
+
+    .aname {
+        font-family: 'Cormorant Garamond', serif;
+        font-size: 28px;
+        font-weight: 300;
+        font-style: italic;
+        letter-spacing: .06em;
+        text-shadow: 0 0 50px rgba(200, 169, 110, .3)
+    }
+
+    .asub {
+        font-size: 7px;
+        letter-spacing: .22em;
+        text-transform: uppercase;
+        color: var(--gold);
+        margin-top: 4px;
+        opacity: .75
+    }
+
+    .bottom {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        z-index: 20;
+        padding: 0 14px 22px;
+        background: linear-gradient(to top, rgba(5, 8, 15, .97) 55%, transparent)
+    }
+
+    .resp {
+        max-width: 420px;
+        margin: 0 auto 10px;
+        min-height: 42px;
+        text-align: center
+    }
+
+    .rtxt {
+        font-family: 'Cormorant Garamond', serif;
+        font-size: 16px;
+        font-weight: 300;
+        line-height: 1.55;
+        letter-spacing: .02em;
+        transition: opacity .3s
+    }
+
+    .rtxt.muted {
+        opacity: .25
+    }
+
+    .tdots {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+        margin-bottom: 8px;
+        height: 12px
+    }
+
+    .tdot {
+        width: 3px;
+        height: 3px;
+        border-radius: 50%;
+        background: var(--gold);
+        opacity: 0
+    }
+
+    .tdots.on .tdot {
+        animation: tpop .9s ease infinite;
+        opacity: 1
+    }
+
+    .tdot:nth-child(2) {
+        animation-delay: .15s !important
+    }
+
+    .tdot:nth-child(3) {
+        animation-delay: .3s !important
+    }
+
+    @keyframes tpop {
+        0%, 100% {
+            transform: translateY(0);
+            opacity:.25
+        }
+
+        50% {
+            transform: translateY(-4px);
+            opacity: 1
+        }
+    }
+
+    .irow {
+        max-width: 420px;
+        margin: 0 auto;
+        display: flex;
+        gap: 8px;
+        align-items: center
+    }
+
+    .tin {
+        flex: 1;
+        background: rgba(255, 255, 255, .035);
+        border: 1px solid var(--bd);
+        border-radius: 50px;
+        padding: 13px 16px;
+        color: var(--text);
+        font-family: 'Space Mono', monospace;
+        font-size: 12px;
+        outline: none;
+        -webkit-appearance: none;
+        transition: border-color .2s
+    }
+
+    .tin:focus {
+        border-color: var(--gdim)
+    }
+
+    .tin::placeholder {
+        color: var(--dim);
+        font-size: 10px
+    }
+
+    .ibtn {
+        width: 46px;
+        height: 46px;
+        border-radius: 50%;
+        border: 1px solid var(--bd);
+        background: rgba(255, 255, 255, .025);
+        color: var(--dim);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        cursor: pointer;
+        -webkit-appearance: none;
+        transition: all .2s;
+        position: relative
+    }
+
+    .ibtn.gold {
+        border-color: var(--gdim);
+        background: rgba(200, 169, 110, .06);
+        color: var(--gold)
+    }
+
+    .ibtn:disabled {
+        opacity: .2;
+        cursor: not-allowed
+    }
+
+    .ibtn:not(:disabled):active {
+        opacity: .65
+    }
+
+    .ibtn.micon {
+        border-color: var(--blue);
+        color: var(--blue)
+    }
+    </style>
+</head>
+<body>
+    <canvas id="c">
+    </canvas>
+    <header>
+        <div class="brand">
+            EMOTIV 
+            <span>XR</span>
+        </div>
+        <div class="pill">
+            <div class="dot live" id="dot"></div>
+            <span id="stxt">Live</span>
+        </div>
+    </header>
+    <div class="toasts" id="toasts"></div>
+    <div class="avatar-id">
+        <div class="aname">ARIA</div>
+        <div class="asub">Agentic Reality Interface - EMOTIV XR</div>
+    </div>
+    <div class="bottom">
+        <div class="resp">
+            <div class="tdots" id="td">
+                <div class="tdot"></div>
+                <div class="tdot"></div>
+                <div class="tdot"></div>
+            </div>
+            <div class="rtxt muted" id="rt">Ask ARIA anything...</div>
+        </div>
+        <div class="irow">
+            <button class="ibtn" id="micBtn" onclick="toggleMic()">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <rect x="5" y="1" width="6" height="8" rx="3" stroke="currentColor" stroke-width="1.4"/>
+                    <path d="M2 8c0 3 2.686 5.5 6 5.5S14 11 14 8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+                    <line x1="8" y1="13.5" x2="8" y2="15.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+                </svg>
+            </button>
+            <input class="tin" id="tin" placeholder="Ask ARIA anything..." onkeydown="if(event.key==='Enter'){doSend()}"/>
+            <button class="ibtn gold" id="sbtn" onclick="doSend()">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                    <path d="M12 7L2 2l2 5-2 5 10-5z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
+                </svg>
+            </button>
+        </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+    var ariaScene,
+        ariaCam,
+        ariaRen,
+        ariaClock;
+    var ariaAvatar,
+        ariaHead,
+        ariaMouth,
+        ariaEyeL,
+        ariaEyeR;
+    var ariaParticles,
+        ariaParticleBase,
+        ariaFloaters;
+    var ariaLights,
+        ariaBreath,
+        ariaLipVal,
+        ariaSpeak;
+    var ariaEmotTarget,
+        ariaEmotCurrent,
+        ariaSceneObj;
+    var ariaMsgs,
+        ariaBusy,
+        ariaListening,
+        ariaSynth;
+    var ariaRecog;
+
+    function init() {
+        ariaBreath = 0;
+        ariaLipVal = 0;
+        ariaSpeak = false;
+        ariaFloaters = [];
+        ariaLights = {};
+        ariaMsgs = [];
+        ariaBusy = false;
+        ariaListening = false;
+        ariaSynth = window.speechSynthesis;
+        ariaEmotTarget = {
+            smile: 0,
+            brow: 0
+        };
+        ariaEmotCurrent = {
+            smile: 0,
+            brow: 0
+        };
+        ariaSceneObj = null;
+
+        var cv = document.getElementById('c');
+        ariaScene = new THREE.Scene();
+        ariaScene.fog = new THREE.FogExp2(0x05080F, 0.1);
+        ariaClock = new THREE.Clock();
+        ariaCam = new THREE.PerspectiveCamera(44, innerWidth / innerHeight, 0.1, 100);
+        ariaCam.position.set(0, 0.08, 2.9);
+        ariaRen = new THREE.WebGLRenderer({
+            canvas: cv,
+            antialias: true,
+            alpha: true
+        });
+        ariaRen.setSize(innerWidth, innerHeight);
+        ariaRen.setPixelRatio(Math.min(devicePixelRatio, 2));
+        ariaRen.toneMapping = THREE.ACESFilmicToneMapping;
+        ariaRen.toneMappingExposure = 1.1;
+
+        buildLights();
+        buildAvatar();
+        buildParticles();
+        buildEnv();
+        buildFloaters();
+
+        window.addEventListener('resize', function() {
+            ariaCam.aspect = innerWidth / innerHeight;
+            ariaCam.updateProjectionMatrix();
+            ariaRen.setSize(innerWidth, innerHeight);
+        });
+
+        if (ariaSynth) {
+            ariaSynth.getVoices();
+            setTimeout(function() {
+                ariaSynth.getVoices();
+            }, 400);
+        }
+
+        document.getElementById('tin').addEventListener('input', function() {
+            document.getElementById('sbtn').disabled = !this.value.trim();
+        });
+
+        tick();
+    }
+
+    function buildLights() {
+        ariaLights.amb = new THREE.AmbientLight(0x1a2040, 0.9);
+        ariaScene.add(ariaLights.amb);
+        ariaLights.key = new THREE.DirectionalLight(0xffeedd, 1.3);
+        ariaLights.key.position.set(1.5, 2.5, 2);
+        ariaScene.add(ariaLights.key);
+        ariaLights.fil = new THREE.DirectionalLight(0x4466ff, 0.4);
+        ariaLights.fil.position.set(-2, 0, 1);
+        ariaScene.add(ariaLights.fil);
+        ariaLights.rim = new THREE.DirectionalLight(0xC8A96E, 0.7);
+        ariaLights.rim.position.set(0, 1.5, -2);
+        ariaScene.add(ariaLights.rim);
+    }
+
+    function buildAvatar() {
+        ariaAvatar = new THREE.Group();
+        ariaScene.add(ariaAvatar);
+        var sk = new THREE.MeshStandardMaterial({
+            color: 0xD4A882,
+            roughness: 0.72
+        });
+        var dk = new THREE.MeshStandardMaterial({
+            color: 0x0c0a08,
+            roughness: 0.9,
+            metalness: 0.05
+        });
+        var bodyM = new THREE.Mesh(new THREE.CylinderGeometry(0.19, 0.23, 0.72, 32), new THREE.MeshStandardMaterial({
+            color: 0x100e14,
+            roughness: 0.6,
+            metalness: 0.15
+        }));
+        bodyM.position.y = -0.73;
+        ariaAvatar.add(bodyM);
+        var neckM = new THREE.Mesh(new THREE.CylinderGeometry(0.073, 0.086, 0.19, 32), sk);
+        neckM.position.y = -0.27;
+        ariaAvatar.add(neckM);
+        ariaHead = new THREE.Mesh(new THREE.SphereGeometry(0.225, 64, 64), sk.clone());
+        ariaHead.scale.set(1, 1.17, 0.95);
+        ariaAvatar.add(ariaHead);
+        var ht = new THREE.Mesh(new THREE.SphereGeometry(0.232, 32, 32, 0, Math.PI * 2, 0, Math.PI * 0.52), dk);
+        ht.position.y = 0.05;
+        ariaAvatar.add(ht);
+        [-1, 1].forEach(function(s) {
+            var h = new THREE.Mesh(new THREE.SphereGeometry(0.17, 16, 16, s > 0 ? 0 : Math.PI, Math.PI), dk);
+            h.position.set(s * 0.2, -0.07, 0);
+            h.scale.set(0.48, 1.25, 0.78);
+            ariaAvatar.add(h);
+        });
+        [-1, 1].forEach(function(s) {
+            var eg = new THREE.Group();
+            eg.position.set(s * 0.083, 0.05, 0.197);
+            eg.add(new THREE.Mesh(new THREE.SphereGeometry(0.029, 16, 16), new THREE.MeshStandardMaterial({
+                color: 0xf8f5f0,
+                roughness: 0.2
+            })));
+            var ir = new THREE.Mesh(new THREE.SphereGeometry(0.018, 12, 12), new THREE.MeshStandardMaterial({
+                color: 0x180900,
+                roughness: 0.1,
+                metalness: 0.3
+            }));
+            ir.position.z = 0.017;
+            eg.add(ir);
+            var pu = new THREE.Mesh(new THREE.SphereGeometry(0.009, 8, 8), new THREE.MeshBasicMaterial({
+                color: 0x000000
+            }));
+            pu.position.z = 0.025;
+            eg.add(pu);
+            if (s < 0) {
+                ariaEyeL = eg;
+            } else {
+                ariaEyeR = eg;
+            }
+            ariaAvatar.add(eg);
+        });
+        var no = new THREE.Mesh(new THREE.SphereGeometry(0.021, 8, 8), sk.clone());
+        no.position.set(0, -0.025, 0.212);
+        no.scale.set(1.1, 0.65, 0.75);
+        ariaAvatar.add(no);
+        ariaMouth = new THREE.Group();
+        ariaMouth.position.set(0, -0.092, 0.207);
+        var lm = new THREE.MeshStandardMaterial({
+            color: 0xB86868,
+            roughness: 0.5
+        });
+        var ul = new THREE.Mesh(new THREE.TorusGeometry(0.037, 0.008, 8, 20, Math.PI), lm);
+        ul.rotation.z = Math.PI;
+        ul.position.y = 0.008;
+        ariaMouth.add(ul);
+        var ll = new THREE.Mesh(new THREE.TorusGeometry(0.037, 0.011, 8, 20, Math.PI), lm);
+        ll.position.y = -0.007;
+        ariaMouth.add(ll);
+        ariaAvatar.add(ariaMouth);
+        [-1, 1].forEach(function(s) {
+            var e = new THREE.Mesh(new THREE.SphereGeometry(0.038, 16, 16), sk);
+            e.position.set(s * 0.224, 0.01, 0);
+            e.scale.set(0.48, 0.68, 0.48);
+            ariaAvatar.add(e);
+        });
+        var gl = new THREE.Mesh(new THREE.PlaneGeometry(1.4, 1.8), new THREE.MeshBasicMaterial({
+            color: 0xC8A96E,
+            transparent: true,
+            opacity: 0.03,
+            side: THREE.DoubleSide
+        }));
+        gl.position.z = -0.28;
+        ariaAvatar.add(gl);
+        ariaAvatar.position.y = 0.04;
+    }
+
+    function buildParticles() {
+        var n = 220;
+        var pos = new Float32Array(n * 3);
+        ariaParticleBase = new Float32Array(n * 3);
+        for (var i = 0; i < n; i++) {
+            var x = (Math.random() - 0.5) * 7;
+            var y = (Math.random() - 0.5) * 5;
+            var z = (Math.random() - 0.5) * 4 - 1;
+            pos[i * 3] = ariaParticleBase[i * 3] = x;
+            pos[i * 3 + 1] = ariaParticleBase[i * 3 + 1] = y;
+            pos[i * 3 + 2] = ariaParticleBase[i * 3 + 2] = z;
+        }
+        var g = new THREE.BufferGeometry();
+        g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+        ariaParticles = new THREE.Points(g, new THREE.PointsMaterial({
+            color: 0xC8A96E,
+            size: 0.011,
+            transparent: true,
+            opacity: 0.4,
+            sizeAttenuation: true
+        }));
+        ariaScene.add(ariaParticles);
+    }
+
+    function buildEnv() {
+        var gr = new THREE.GridHelper(12, 24, 0x111830, 0x080f1a);
+        gr.position.y = -1.45;
+        gr.material.transparent = true;
+        gr.material.opacity = 0.3;
+        ariaScene.add(gr);
+        var bg = new THREE.Mesh(new THREE.PlaneGeometry(10, 7), new THREE.MeshStandardMaterial({
+            color: 0x060A14,
+            roughness: 1
+        }));
+        bg.position.z = -2.8;
+        ariaScene.add(bg);
+        [-1.9, 1.9].forEach(function(x) {
+            var b = new THREE.Mesh(new THREE.BoxGeometry(0.01, 3.5, 0.01), new THREE.MeshBasicMaterial({
+                color: 0xC8A96E,
+                transparent: true,
+                opacity: 0.1
+            }));
+            b.position.set(x, 0, -2);
+            ariaScene.add(b);
+        });
+    }
+
+    function buildFloaters() {
+        var geos = [new THREE.OctahedronGeometry(0.055), new THREE.TetrahedronGeometry(0.048), new THREE.OctahedronGeometry(0.038)];
+        var mat = new THREE.MeshStandardMaterial({
+            color: 0xC8A96E,
+            roughness: 0.25,
+            metalness: 0.85,
+            transparent: true,
+            opacity: 0.45,
+            wireframe: true
+        });
+        [[-1.1, 0.35, 0.25], [1.15, 0.18, 0.15], [-0.75, -0.45, 0.3]].forEach(function(p, i) {
+            var m = new THREE.Mesh(geos[i % geos.length], mat.clone());
+            m.position.set(p[0], p[1], p[2]);
+            m.userData = {
+                by: p[1],
+                sp: 0.35 + Math.random() * 0.45,
+                ph: Math.random() * Math.PI * 2
+            };
+            ariaScene.add(m);
+            ariaFloaters.push(m);
+        });
+    }
+
+    var MOODS = {
+        neutral: {
+            amb: 0x1a2040,
+            key: 0xffeedd,
+            ki: 1.3,
+            fil: 0x4466ff,
+            fi: 0.4,
+            rim: 0xC8A96E,
+            ri: 0.7
+        },
+        warm: {
+            amb: 0x2a1808,
+            key: 0xffcc88,
+            ki: 1.6,
+            fil: 0xff7733,
+            fi: 0.3,
+            rim: 0xffaa44,
+            ri: 0.9
+        },
+        cool: {
+            amb: 0x0a1535,
+            key: 0x88ccff,
+            ki: 1.0,
+            fil: 0x4488ff,
+            fi: 0.6,
+            rim: 0x88aaff,
+            ri: 0.5
+        },
+        dramatic: {
+            amb: 0x080808,
+            key: 0xffffff,
+            ki: 2.2,
+            fil: 0x000011,
+            fi: 0.05,
+            rim: 0xC8A96E,
+            ri: 1.3
+        },
+        golden: {
+            amb: 0x1c1200,
+            key: 0xffdd88,
+            ki: 1.9,
+            fil: 0xffaa22,
+            fi: 0.5,
+            rim: 0xffe066,
+            ri: 1.1
+        },
+        night: {
+            amb: 0x040410,
+            key: 0x2244aa,
+            ki: 0.35,
+            fil: 0x1122aa,
+            fi: 0.15,
+            rim: 0x4466ff,
+            ri: 0.3
+        }
+    };
+
+    var EMOTS = {
+        neutral: {
+            smile: 0,
+            brow: 0
+        },
+        happy: {
+            smile: 0.6,
+            brow: 0.12
+        },
+        excited: {
+            smile: 0.9,
+            brow: 0.3
+        },
+        thoughtful: {
+            smile: -0.1,
+            brow: -0.18
+        },
+        welcoming: {
+            smile: 0.4,
+            brow: 0.18
+        },
+        confident: {
+            smile: 0.25,
+            brow: -0.08
+        }
+    };
+
+    function setMood(name, intensity) {
+        var m = MOODS[name] || MOODS.neutral;
+        var f = intensity || 1;
+        ariaLights.amb.color.set(m.amb);
+        ariaLights.key.color.set(m.key);
+        ariaLights.key.intensity = m.ki * f;
+        ariaLights.fil.color.set(m.fil);
+        ariaLights.fil.intensity = m.fi * f;
+        ariaLights.rim.color.set(m.rim);
+        ariaLights.rim.intensity = m.ri * f;
+        addToast('Lighting: ' + name);
+    }
+
+    function setEmot(name) {
+        var e = EMOTS[name] || EMOTS.neutral;
+        ariaEmotTarget.smile = e.smile;
+        ariaEmotTarget.brow = e.brow;
+        addToast('ARIA: ' + name);
+    }
+
+    function showObj(name, anim) {
+        if (ariaSceneObj) {
+            ariaScene.remove(ariaSceneObj);
+            ariaSceneObj = null;
+        }
+        if (name === 'none') {
+            return;
+        }
+        var mesh;
+        if (name === 'car') {
+            var g = new THREE.Group();
+            g.add(new THREE.Mesh(new THREE.BoxGeometry(0.58, 0.17, 0.27), new THREE.MeshStandardMaterial({
+                color: 0xC8A96E,
+                metalness: 0.9,
+                roughness: 0.08
+            })));
+            var cm = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.13, 0.24), new THREE.MeshStandardMaterial({
+                color: 0xaa8840,
+                metalness: 0.8,
+                roughness: 0.12
+            }));
+            cm.position.set(-0.04, 0.15, 0);
+            g.add(cm);
+            mesh = g;
+        } else if (name === 'product') {
+            mesh = new THREE.Mesh(new THREE.TorusKnotGeometry(0.11, 0.038, 80, 12), new THREE.MeshStandardMaterial({
+                color: 0xC8A96E,
+                metalness: 0.92,
+                roughness: 0.08
+            }));
+        } else if (name === 'logo') {
+            mesh = new THREE.Mesh(new THREE.OctahedronGeometry(0.14), new THREE.MeshStandardMaterial({
+                color: 0xC8A96E,
+                metalness: 0.8,
+                roughness: 0.18
+            }));
+        } else {
+            mesh = new THREE.Mesh(new THREE.SphereGeometry(0.11, 16, 16), new THREE.MeshStandardMaterial({
+                color: 0x4A9EFF,
+                metalness: 0.5,
+                roughness: 0.3
+            }));
+        }
+        mesh.position.set(0.9, 0.08, 0.75);
+        mesh.scale.set(0, 0, 0);
+        mesh.userData.anim = anim || 'fade_in';
+        mesh.userData.ap = 0;
+        ariaScene.add(mesh);
+        ariaSceneObj = mesh;
+        addToast('Object: ' + name);
+    }
+
+    function addToast(msg) {
+        var c = document.getElementById('toasts');
+        var d = document.createElement('div');
+        d.className = 'toast';
+        d.textContent = msg.toUpperCase();
+        c.appendChild(d);
+        setTimeout(function() {
+            d.style.cssText = 'opacity:0;transition:opacity .4s';
+            setTimeout(function() {
+                if (d.parentNode) {
+                    d.parentNode.removeChild(d);
+                }
+            }, 400);
+        }, 2800);
+    }
+
+    function tick() {
+        requestAnimationFrame(tick);
+        var dt = ariaClock.getDelta();
+        var t = ariaClock.getElapsedTime();
+        ariaBreath += dt * 0.88;
+        if (ariaAvatar) {
+            ariaAvatar.position.y = 0.04 + Math.sin(ariaBreath) * 0.006;
+            ariaAvatar.rotation.y = Math.sin(t * 0.17) * 0.038;
+            ariaAvatar.position.x = Math.sin(t * 0.12) * 0.013;
+        }
+        if (ariaHead) {
+            ariaHead.rotation.z = Math.sin(t * 0.21) * 0.018;
+        }
+        if (ariaEyeL && ariaEyeR) {
+            var ex = Math.sin(t * 0.28) * 0.007;
+            var ey = Math.cos(t * 0.21) * 0.005;
+            ariaEyeL.rotation.y = ex;
+            ariaEyeL.rotation.x = ey;
+            ariaEyeR.rotation.y = ex;
+            ariaEyeR.rotation.x = ey;
+        }
+        if (ariaMouth) {
+            if (ariaSpeak) {
+                ariaLipVal = Math.abs(Math.sin(t * 11.5)) * 0.55 + Math.abs(Math.sin(t * 7.1)) * 0.28;
+                ariaMouth.scale.y = 1 + ariaLipVal * 1.5;
+                ariaMouth.position.y = -0.092 - ariaLipVal * 0.009;
+            } else {
+                ariaMouth.scale.y += (1 - ariaMouth.scale.y) * 0.14;
+                ariaMouth.position.y += (-0.092 - ariaMouth.position.y) * 0.14;
+            }
+        }
+        ariaEmotCurrent.smile += (ariaEmotTarget.smile - ariaEmotCurrent.smile) * 0.04;
+        ariaEmotCurrent.brow += (ariaEmotTarget.brow - ariaEmotCurrent.brow) * 0.04;
+        if (ariaHead) {
+            ariaHead.rotation.x = ariaEmotCurrent.brow * -0.07;
+            ariaHead.scale.y = 1.17 + ariaEmotCurrent.smile * 0.025;
+        }
+        if (ariaParticles) {
+            ariaParticles.rotation.y = t * 0.012;
+            var pa = ariaParticles.geometry.attributes.position;
+            for (var i = 0; i < pa.count; i++) {
+                pa.setY(i, ariaParticleBase[i * 3 + 1] + Math.sin(t * 0.45 + i * 0.28) * 0.07);
+            }
+            pa.needsUpdate = true;
+        }
+        ariaFloaters.forEach(function(f) {
+            f.rotation.x += dt * 0.48;
+            f.rotation.y += dt * 0.75;
+            f.position.y = f.userData.by + Math.sin(t * f.userData.sp + f.userData.ph) * 0.1;
+        });
+        if (ariaSceneObj) {
+            if (ariaSceneObj.userData.ap < 1) {
+                ariaSceneObj.userData.ap = Math.min(1, ariaSceneObj.userData.ap + dt * 1.6);
+                var s = 1 - Math.pow(1 - ariaSceneObj.userData.ap, 3);
+                ariaSceneObj.scale.set(s, s, s);
+            }
+            ariaSceneObj.rotation.y += dt * (ariaSceneObj.userData.anim === 'spin' ? 2 : 0.5);
+            if (ariaSceneObj.userData.anim === 'float') {
+                ariaSceneObj.position.y = 0.08 + Math.sin(t) * 0.09;
+            }
+        }
+        ariaRen.render(ariaScene, ariaCam);
+    }
+
+    function setDot(cls, txt) {
+        document.getElementById('dot').className = 'dot ' + cls;
+        document.getElementById('stxt').textContent = txt;
+    }
+
+    var ARIA_TOOLS = [
+    {
+        name: 'set_scene_lighting',
+        description: 'Change the XR scene lighting mood.',
+        input_schema: {
+            type: 'object',
+            properties: {
+                mood: {
+                    type: 'string',
+                    enum: ['neutral', 'warm', 'cool', 'dramatic', 'golden', 'night']
+                },
+                intensity: {
+                    type: 'number'
+                }
+            },
+            required: ['mood']
+        }
+    },
+    {
+        name: 'trigger_avatar_emotion',
+        description: 'Make ARIA express an emotion.',
+        input_schema: {
+            type: 'object',
+            properties: {
+                emotion: {
+                    type: 'string',
+                    enum: ['neutral', 'happy', 'excited', 'thoughtful', 'welcoming', 'confident']
+                }
+            },
+            required: ['emotion']
+        }
+    },
+    {
+        name: 'show_scene_object',
+        description: 'Show a 3D object in the scene.',
+        input_schema: {
+            type: 'object',
+            properties: {
+                object: {
+                    type: 'string',
+                    enum: ['car', 'product', 'logo', 'environment', 'none']
+                },
+                animation: {
+                    type: 'string',
+                    enum: ['fade_in', 'spin', 'float', 'none']
+                }
+            },
+            required: ['object']
+        }
+    }
+    ];
+
+    var ARIA_SYS = "You are ARIA, the AI agent powering EMOTIV XR - a premium extended reality platform. Embodied as a 3D avatar. Personality: sophisticated, warm, intelligent. Use tools every response. Keep responses to 2-3 sentences max.";
+
+    function doSend() {
+        var msg = document.getElementById('tin').value.trim();
+        if (!msg || ariaBusy) {
+            return;
+        }
+        ariaBusy = true;
+        document.getElementById('tin').value = '';
+        document.getElementById('sbtn').disabled = true;
+        document.getElementById('rt').classList.add('muted');
+        document.getElementById('td').classList.add('on');
+        setDot('think', 'Thinking');
+        if (ariaSynth) {
+            ariaSynth.cancel();
+        }
+        ariaSpeak = false;
+
+        var payload = {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                message: msg,
+                history: ariaMsgs.slice(),
+                api_key: ''
+            })
+        };
+
+        fetch('/api/chat', payload)
+        .then(function(res) {
+            return res.text().then(function(txt) {
+                if (!res.ok) {
+                    throw new Error('Server error ' + res.status + ': ' + txt.slice(0, 150));
+                }
+                return JSON.parse(txt);
+            });
+        })
+        .then(function(data) {
+            document.getElementById('td').classList.remove('on');
+            if (data.tool_calls && data.tool_calls.length) {
+                data.tool_calls.forEach(function(tc) {
+                    if (tc.name === 'set_scene_lighting') {
+                        setMood(tc.input.mood, tc.input.intensity);
+                    }
+                    if (tc.name === 'trigger_avatar_emotion') {
+                        setEmot(tc.input.emotion);
+                    }
+                    if (tc.name === 'show_scene_object') {
+                        showObj(tc.input.object, tc.input.animation);
+                    }
+                });
+            }
+            if (data.text) {
+                document.getElementById('rt').textContent = data.text;
+                document.getElementById('rt').classList.remove('muted');
+                ariaMsgs.push({
+                    role: 'user',
+                    content: msg
+                });
+                ariaMsgs.push({
+                    role: 'assistant',
+                    content: data.text
+                });
+                if (ariaMsgs.length > 16) {
+                    ariaMsgs = ariaMsgs.slice(-16);
+                }
+                ariaSpeak = true;
+                speakText(data.text);
+            }
+        })
+        .catch(function(err) {
+            document.getElementById('td').classList.remove('on');
+            document.getElementById('rt').textContent = err.message;
+            document.getElementById('rt').classList.remove('muted');
+            setDot('', 'Error');
+        })
+        .finally(function() {
+            ariaBusy = false;
+            document.getElementById('sbtn').disabled = false;
+            setDot('live', 'Live');
+        });
+    }
+
+    function speakText(txt) {
+        if (!ariaSynth) {
+            ariaSpeak = false;
+            return;
+        }
+        ariaSynth.cancel();
+        var u = new SpeechSynthesisUtterance(txt);
+        u.rate = 0.91;
+        u.pitch = 1.06;
+        u.volume = 1;
+        var vv = ariaSynth.getVoices();
+        var picked = vv.find(function(v) {
+            return /Samantha|Karen|Moira|Serena/i.test(v.name);
+        });
+        if (picked) {
+            u.voice = picked;
+        }
+        u.onstart = function() {
+            ariaSpeak = true;
+            setDot('speak', 'Speaking');
+        };
+        u.onend = function() {
+            ariaSpeak = false;
+            setDot('live', 'Live');
+        };
+        u.onerror = function() {
+            ariaSpeak = false;
+            setDot('live', 'Live');
+        };
+        ariaSynth.speak(u);
+    }
+
+    function toggleMic() {
+        var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SR) {
+            alert('Voice input needs Chrome or Safari 14.1+');
+            return;
+        }
+        if (ariaListening) {
+            if (ariaRecog) {
+                ariaRecog.stop();
+            }
+            return;
+        }
+        ariaRecog = new SR();
+        ariaRecog.lang = 'en-US';
+        ariaRecog.interimResults = true;
+        var btn = document.getElementById('micBtn');
+        ariaRecog.onstart = function() {
+            ariaListening = true;
+            btn.classList.add('micon');
+            setDot('speak', 'Listening');
+            if (ariaSynth) {
+                ariaSynth.cancel();
+            }
+        };
+        ariaRecog.onend = function() {
+            ariaListening = false;
+            btn.classList.remove('micon');
+            setDot('live', 'Live');
+        };
+        ariaRecog.onerror = function() {
+            ariaListening = false;
+            btn.classList.remove('micon');
+            setDot('live', 'Live');
+        };
+        ariaRecog.onresult = function(e) {
+            var t = '';
+            for (var i = e.resultIndex; i < e.results.length; i++) {
+                t += e.results[i][0].transcript;
+            }
+            document.getElementById('tin').value = t;
+            if (e.results[e.results.length - 1].isFinal) {
+                ariaRecog.stop();
+                doSend();
+            }
+        };
+        ariaRecog.start();
+    }
+
+    window.addEventListener('load', init);
+    </script>
+</body>
+</html>
